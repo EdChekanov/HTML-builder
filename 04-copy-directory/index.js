@@ -4,7 +4,8 @@ const path = require('path');
 const srcDir = path.join(__dirname, 'files');
 const srcCopyDir = path.join(__dirname, 'files-copy');
 
-fs.promises.mkdir(srcCopyDir, { recursive: true});
+fs.promises.mkdir(srcCopyDir, {recursive: true});
+
 fs.readdir(srcDir, (err, files) => {
     if (err) {
       console.log(err);
@@ -19,3 +20,21 @@ fs.readdir(srcDir, (err, files) => {
     }
 }
 );
+
+fs.readdir(srcCopyDir, (err, files) => {
+    if (err) {
+      console.log(err);
+    } else {
+        files.forEach((file) => {
+            let src = path.join(srcDir, file);
+            let srcCopy = path.join(srcCopyDir, file);
+            fs.access(src, (err) => {
+                if (err) {
+                    fs.rm(srcCopy, {recursive: true }, (err) => {
+                        if (err) console.log(err);
+                    });
+                }
+            })
+        });
+    }
+});

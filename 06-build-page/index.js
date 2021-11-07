@@ -120,14 +120,40 @@ function remove(srcCopyFrom, srcCopyTo) {
           } else {
             let srcToDir = path.join(srcCopyTo, file.name);
             let srcFromDir = path.join(srcCopyFrom, file.name);
-            remove(srcFromDir, srcToDir);
+            fs.access(srcFromDir, (err) => {
+              if (err) {
+                fs.rm(srcToDir, {recursive: true }, (err) => {
+                    if (err) {
+                      recursiveRemoveDir(srcToDir);
+                    };
+                });
+              } else {
+                remove(srcFromDir, srcToDir);
+              }
+            })
           }
         });
     }
 })
 };
 
+function recursiveRemoveDir(srcRemoveDir) {
+  fs.readdir(srcRemoveDir, {withFileTypes: 'true'}, (err, files) => {
+    if (err) {
+      console.log(err);
+    } else {
+      files.forEach((file) => {
+        let src = path.join(srcRemoveDir, file.name);
+        fs.rm(src, {recursive: true}, (err) => {
+          if (err) recursiveRemoveDir(src);
+        })
+      })
+    }
+  })
+}
+
 setTimeout(() => {
   copy(srcDir, srcCopyDir);
   remove(srcDir, srcCopyDir);
 }, 100);
+

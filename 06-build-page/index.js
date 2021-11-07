@@ -77,22 +77,23 @@ const srcCopyDir = path.join(__dirname, 'project-dist', 'assets');
 
 fs.promises.mkdir(srcCopyDir, {recursive: true});
 
-function copy(srcCopyFrom) {
+function copy(srcCopyFrom, srcCopyTo) {
   fs.readdir(srcCopyFrom, {withFileTypes: 'true'}, (err, files) => {
     if (err) {
       console.log(err);
     } else {
         files.forEach((file) => {
           if (file.isFile()) {
-            let src = path.join(srcCopyFrom, file);
-            let way = path.join(srcCopyDir, file);
+            let src = path.join(srcCopyFrom, file.name);
+            let way = path.join(srcCopyTo, file.name);
             fs.copyFile(src, way, (err) => {
                 if (err) console.log(err);
             })
           } else {
-            let srcToDir = path.join(srcCopyDir, file.name);
+            let srcToDir = path.join(srcCopyTo, file.name);
+            let srcFromDir = path.join(srcCopyFrom, file.name);
             fs.promises.mkdir(srcToDir, {recursive: true});
-            copy(srcToDir);
+            copy(srcFromDir, srcToDir);
           }
           });
     }
@@ -100,15 +101,15 @@ function copy(srcCopyFrom) {
 );
 };
 
-function remove(srcCopyTo) {
-  fs.readdir(srcCopyTo, (err, files) => {
+function remove(srcCopyFrom, srcCopyTo) {
+  fs.readdir(srcCopyTo, {withFileTypes: 'true'}, (err, files) => {
     if (err) {
       console.log(err);
     } else {
         files.forEach((file) => {
           if (file.isFile()) {
-            let src = path.join(srcDir, file);
-            let srcCopy = path.join(srcCopyTo, file);
+            let src = path.join(srcCopyFrom, file.name);
+            let srcCopy = path.join(srcCopyTo, file.name);
             fs.access(src, (err) => {
                 if (err) {
                     fs.rm(srcCopy, {recursive: true }, (err) => {
@@ -118,7 +119,8 @@ function remove(srcCopyTo) {
             })
           } else {
             let srcToDir = path.join(srcCopyTo, file.name);
-            remove(srcToDir);
+            let srcFromDir = path.join(srcCopyFrom, file.name);
+            remove(srcFromDir, srcToDir);
           }
         });
     }
@@ -126,6 +128,6 @@ function remove(srcCopyTo) {
 };
 
 setTimeout(() => {
-  copy(srcDir);
-  remove(srcCopyDir);
+  copy(srcDir, srcCopyDir);
+  remove(srcDir, srcCopyDir);
 }, 100);
